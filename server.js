@@ -1,7 +1,8 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const sqlite3 = require("sqlite3").verbose();
+const Database = require("better-sqlite3");
+const db = new Database("airdata.db");
 const path = require("path");
 
 const app = express();
