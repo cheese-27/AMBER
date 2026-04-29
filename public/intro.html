@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Loading A.M.B.E.R</title>
+
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+
+  background:
+    radial-gradient(circle at 20% 20%, rgba(120,160,255,0.18), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(180,100,255,0.12), transparent 45%),
+    radial-gradient(circle at center, rgba(5,8,18,1), rgba(2,3,10,1));
+}
+
+/* ===== FLOATING ORBS ===== */
+.orb {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: floatOrb 8s ease-in-out infinite;
+}
+
+.orb.one {
+  background: rgba(120,160,255,0.6);
+  top: -120px;
+  left: -140px;
+}
+
+.orb.two {
+  background: rgba(180,100,255,0.5);
+  bottom: -140px;
+  right: -120px;
+  animation-delay: 2s;
+}
+
+@keyframes floatOrb {
+  0%,100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(30px) scale(1.08); }
+}
+
+/* ===== CARD ===== */
+.card {
+  position: relative;
+  text-align: center;
+  padding: 44px 64px;
+
+  border-radius: 28px;
+
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 40px 120px rgba(0,0,0,0.7),
+    inset 0 0 40px rgba(255,255,255,0.03);
+
+  animation: reveal 1.2s cubic-bezier(0.22,1,0.36,1);
+}
+
+/* ===== FIXED MODERN GLOW BORDER (NO MASK WARNING) ===== */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 28px;
+
+  background: linear-gradient(120deg,
+    rgba(120,160,255,0.6),
+    rgba(180,100,255,0.35),
+    rgba(120,160,255,0.6)
+  );
+
+  filter: blur(14px);
+  opacity: 0.6;
+
+  z-index: -1;
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+  0%,100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* ===== TEXT ===== */
+.logo {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  color: rgba(255,255,255,0.92);
+
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeUp 1.2s ease forwards;
+}
+
+.sub {
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.55);
+
+  opacity: 0;
+  animation: fadeUp 1.2s ease forwards;
+  animation-delay: 0.3s;
+}
+
+/* ===== LOADING BAR ===== */
+.bar {
+  margin-top: 26px;
+  width: 400px;
+  height: 2px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+
+  align-self: center;
+
+}
+
+.fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7aa2ff, #c084fc);
+
+  animation: load 3s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes load {
+  to { width: 100%; }
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== EXIT ===== */
+.fade-out {
+  animation: exit 0.8s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes exit {
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+    filter: blur(10px);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<div class="card" id="card">
+  <div class="logo">A.M.B.E.R</div>
+  <div class="sub">Air Monitoring • Browser-Based • Emission Reporting</div>
+
+  <div class="bar">
+    <div class="fill"></div>
+  </div>
+</div>
+
+<script>
+const card = document.getElementById("card");
+
+/* exit timing synced */
+setTimeout(() => {
+  card.classList.add("fade-out");
+}, 3200);
+
+setTimeout(() => {
+  window.location.href = "/index.html";
+}, 4000);
+</script>
+
+</body>
+</html>

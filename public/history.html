@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>History Data</title>
+
+<style>
+
+/* ================= GLOBAL IOS STYLE ================= */
+body{
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+
+  background-color: #05060a;
+
+  color: rgba(255,255,255,0.88);
+
+  padding: 24px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  opacity: 0;
+  transform: translateY(10px);
+  animation: pageEnter 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 20% 10%, rgba(80,120,255,0.12), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(160,80,255,0.10), transparent 50%);
+
+  z-index: 0;
+}
+
+@keyframes pageEnter{
+  to{
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= HEADER ================= */
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+
+h2{
+  margin:0;
+  font-size:20px;
+  font-weight:600;
+  letter-spacing: 0.5px;
+}
+
+/* ================= BUTTON ================= */
+button{
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  font-weight:600;
+  cursor:pointer;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+button:hover{
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+button:active{
+  transform: scale(0.98);
+}
+
+.btn-green{
+  background: rgba(34,197,94,0.85);
+  color:#000;
+}
+
+.btn-red{
+  background: rgba(239,68,68,0.85);
+  color:#fff;
+}
+
+/* ================= CONTROL ================= */
+.control-bar{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+/* ================= SELECT ================= */
+select{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background: rgba(17,24,39,0.6);
+  color:white;
+  font-weight:600;
+  backdrop-filter: blur(18px);
+}
+
+/* ================= SEARCH ================= */
+.search-bar{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.search-bar input{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  background: rgba(17,24,39,0.55);
+  color:white;
+  backdrop-filter: blur(18px);
+}
+
+.search-bar input:focus{
+  outline:none;
+  border-color: rgba(34,197,94,0.8);
+  box-shadow: 0 0 20px rgba(34,197,94,0.15);
+}
+
+/* ================= TABLE ================= */
+.table-container{
+  background: rgba(25,30,50,0.18);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  overflow:hidden;
+  backdrop-filter: blur(22px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.table-wrapper{
+  max-height:70vh;
+  overflow-y:auto;
+}
+
+table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead{
+  background: rgba(17,24,39,0.6);
+}
+
+th{
+  padding:14px;
+  font-size:11px;
+  color: rgba(255,255,255,0.55);
+  text-transform:uppercase;
+  letter-spacing: 1px;
+
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(17,24,39,0.95);
+}
+
+td{
+  padding:12px;
+  text-align:center;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+tr{
+  transition: 0.25s ease;
+}
+
+tr:hover{
+  background: rgba(34,197,94,0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header-row">
+  <h2>📊 DEVICE HISTORY</h2>
+
+  <button class="btn-green" onclick="go('/index.html')">
+    📡 Live Dashboard
+  </button>
+</div>
+
+<div class="control-bar">
+  <select id="deleteOption">
+    <option value="all">🗑 Delete All</option>
+    <option value="10">🧹 Delete Oldest 10</option>
+    <option value="reset">🏭 Factory Reset</option>
+    <option value="1h">⏱ Delete Last 1 Hour</option>
+  </select>
+
+  <button class="btn-red" onclick="executeDelete()">
+    DELETE
+  </button>
+</div>
+
+<div class="search-bar">
+  <select id="searchCategory">
+    <option value="all">All Fields</option>
+    <option value="id">ID</option>
+    <option value="temperature">Temperature</option>
+    <option value="humidity">Humidity</option>
+    <option value="ppm">PPM</option>
+    <option value="dust">Dust</option>
+    <option value="timestamp">Timestamp</option>
+  </select>
+
+  <input id="searchInput" type="text"
+  placeholder="Search history..."
+  onkeyup="filterTable()" />
+</div>
+
+<div class="table-container">
+<div class="table-wrapper">
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Temp (°C)</th>
+<th>Humidity (%)</th>
+<th>PPM</th>
+<th>Dust (micrograms/m³)</th>
+<th>Timestamp</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+
+</table>
+
+</div>
+</div>
+
+<script>
+
+let allData=[];
+
+function go(url){
+  document.body.style.opacity="0";
+  document.body.style.transform="translateY(10px)";
+  setTimeout(()=>window.location.href=url,350);
+}
+
+async function loadData(){
+  const res=await fetch("/history");
+  allData=await res.json();
+  renderTable(allData);
+}
+
+function renderTable(data){
+  const table=document.getElementById("table");
+  table.innerHTML="";
+
+  data.forEach(row=>{
+    table.innerHTML+=`
+      <tr>
+        <td>${row.id}</td>
+        <td>${row.temperature}</td>
+        <td>${row.humidity}</td>
+        <td>${row.ppm}</td>
+        <td>${(row.dust * 1000).toFixed(1)}</td>
+        <td>${row.timestamp}</td>
+      </tr>
+    `;
+  });
+}
+
+function filterTable(){
+  const q=document.getElementById("searchInput").value.toLowerCase();
+  const cat=document.getElementById("searchCategory").value;
+
+  if(!q) return renderTable(allData);
+
+  const filtered=allData.filter(r=>{
+
+    const matchAll=
+      String(r.id).includes(q) ||
+      String(r.temperature).includes(q) ||
+      String(r.humidity).includes(q) ||
+      String(r.ppm).includes(q) ||
+      String(r.dust * 1000).includes(q) ||
+      String(r.timestamp).toLowerCase().includes(q);
+
+    if(cat==="all") return matchAll;
+    return String(
+      cat === "dust" ? r.dust * 1000 : r[cat]
+    ).toLowerCase().includes(q);
+  });
+
+  renderTable(filtered);
+}
+
+async function executeDelete(){
+
+const value=document.getElementById("deleteOption").value;
+
+if(!confirm("Delete selected history?")) return;
+
+if(value==="all"){
+await fetch("/history",{method:"DELETE"});
+}
+
+if(value==="10"){
+await fetch("/history/last10",{method:"DELETE"});
+}
+
+if(value==="reset"){
+await fetch("/history/reset",{method:"DELETE"});
+}
+
+if(value==="1h"){
+alert("Not implemented yet");
+return;
+}
+
+loadData();
+}
+
+loadData();
+setInterval(loadData,5000);
+
+</script>
+
+</body>
+</html>
