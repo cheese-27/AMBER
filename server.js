@@ -9,24 +9,19 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 /* ================= STATIC FILES ================= */
-/* IMPORTANT: disable auto index override */
 app.use(express.static(path.join(__dirname, "public"), {
   index: false
 }));
 
 /* ================= ROUTES ================= */
-
-/* INTRO FIRST (DEFAULT ENTRY) */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
 
-/* DASHBOARD */
 app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* HISTORY */
 app.get("/history.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "history.html"));
 });
@@ -49,7 +44,7 @@ db.serialize(() => {
   console.log("📦 SQLite Ready");
 });
 
-/* ================= MANILA TIME ================= */
+/* ================= TIME ================= */
 function getManilaTime() {
   return new Date().toLocaleString("en-PH", {
     timeZone: "Asia/Manila"
@@ -94,27 +89,42 @@ app.delete("/history/reset", (req, res) => {
     db.run("DELETE FROM sensor_data", function (err) {
       if (err) return res.status(500).json({ error: err.message });
 
-      db.run("DELETE FROM sqlite_sequence WHERE name='sensor_data'", (err2) => {
-        if (err2) return res.status(500).json({ error: err2.message });
+      db.run(
+        "DELETE FROM sqlite_sequence WHERE name='sensor_data'",
+        (err2) => {
+          if (err2) return res.status(500).json({ error: err2.message });
 
-        res.json({ message: "Factory reset complete", success: true });
-      });
+          res.json({ message: "Factory reset complete", success: true });
+        }
+      );
     });
   });
 });
 
-/* ================= SYSTEM ================= */
+/* ================= SYSTEM STATE ================= */
 let latestData = null;
 let lastPacketTime = Date.now();
 let serialStatus = "DISCONNECTED";
 
-/* ================= SERIAL ================= */
-const { SerialPort } = require("serialport");
-const { ReadlineParser } = require("@serialport/parser-readline");
+/* ================= SERIAL (FIXED FOR CLOUD) ================= */
+
+let SerialPort, ReadlineParser;
+
+try {
+  ({ SerialPort } = require("serialport"));
+  ({ ReadlineParser } = require("@serialport/parser-readline"));
+} catch (e) {
+  console.log("⚠️ Serial modules not available (cloud mode)");
+}
 
 function connectSerial() {
+  if (!SerialPort) {
+    console.log("☁️ Serial disabled (no hardware environment)");
+    return;
+  }
+
   let port = new SerialPort({
-    path: "COM7",
+    path: "COM7", // LOCAL ONLY
     baudRate: 9600,
     autoOpen: false
   });
@@ -130,16 +140,26 @@ function connectSerial() {
     console.log("✅ Serial Connected");
     serialStatus = "CONNECTED";
 
-    const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
+    const parser = port.pipe(
+      new ReadlineParser({ delimiter: "\n" })
+    );
 
     parser.on("data", (line) => {
       const parts = line.trim().split(",");
+
       if (parts.length !== 4) return;
 
       const [temp, hum, ppm, dust] = parts.map(Number);
+
       if ([temp, hum, ppm, dust].some(isNaN)) return;
 
-      latestData = { temperature: temp, humidity: hum, ppm, dust };
+      latestData = {
+        temperature: temp,
+        humidity: hum,
+        ppm,
+        dust
+      };
+
       lastPacketTime = Date.now();
 
       io.emit("air-data", latestData);
@@ -153,7 +173,12 @@ function connectSerial() {
   });
 }
 
-connectSerial();
+/* ================= ONLY RUN SERIAL LOCALLY ================= */
+if (process.env.LOCAL === "true") {
+  connectSerial();
+} else {
+  console.log("☁️ Running in CLOUD MODE (Serial OFF)");
+}
 
 /* ================= SAVE DATA ================= */
 setInterval(() => {
